@@ -1,0 +1,168 @@
+var geocoder;
+var map;
+var rectangle;
+var tileSize = 256;
+
+function generateLinks()
+{
+	var bounds = rectangle.getBounds();
+	var ne = bounds.getNorthEast();
+	var sw = bounds.getSouthWest();
+	var x1 = sw.lng();
+	var x2 = ne.lng();
+	var y1 = ne.lat();
+	var y2 = sw.lat();
+	var x1u = Math.floor(x1 / 5) * 5 + 180;
+	var x2u = Math.floor(x2 / 5) * 5 + 180;
+	var y1u = 90 - Math.floor(y1 / 5) * 5;
+	var y2u = 90 - Math.floor(y2 / 5) * 5;
+	
+	$("#dlHeightmaps").text("");
+	$("#dlTextures").text("");
+	var server = "http://srtm.csi.cgiar.org/SRT-ZIP/SRTM_v41/SRTM_Data_ArcASCII/";
+	
+	for (var x = x1u; x <= x2u; x += 5)
+	{
+		for (var y = y1u; y <= y2u; y += 5)
+		{
+			var ax = Math.floor(x / 5 + 1);
+			var ay = Math.floor(y / 5 - 6);
+			var filename = "srtm_" + ((ax > 9)? ax: "0" + ax) + "_" + ((ay > 9)? ay: "0" + ay);
+			var el = "<div><a href='" + server + filename + ".zip'><div class='i2Style dl-btn'>Download</div></a>" + filename + "</div>"
+			$("#dlHeightmaps").append(el);
+		}
+	}
+	
+	$("#download-links").show("fast");
+}
+
+function initialize() 
+{
+	var centerPoint = new google.maps.LatLng((Coords.tly + Coords.bry) / 2, (Coords.tlx + Coords.brx) / 2);
+
+	var mapOptions = 
+	{
+		center: centerPoint,
+		zoom: 9,
+		mapTypeId: google.maps.MapTypeId.ROADMAP
+	};
+	
+	var bounds = new google.maps.LatLngBounds(
+		new google.maps.LatLng(Coords.bry, Coords.tlx),
+		new google.maps.LatLng(Coords.tly, Coords.brx)
+	);
+	
+	geocoder = new google.maps.Geocoder();
+	map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+	map.fitBounds(bounds);
+	
+	rectangle = new google.maps.Rectangle({
+		bounds: bounds,
+		draggable: true,
+		editable: true
+	});
+	
+	rectangle.setMap(map);
+	rectangle.addListener("bounds_changed", updateInfo);
+	updateInfo();
+	
+	$("#search-address").keyup(function(event)
+	{
+	    if(event.keyCode == 13) $("#btnSearch").click();
+	});
+	
+	$("#btnCreateSelector").click(showRectangle);
+	$("#btnSearch").click(search);
+	$("#btnShowLinks").click(generateLinks);
+}
+
+function Repeat(value, minValue, maxValue)
+{
+	var range = maxValue - minValue;
+	while (value < minValue || value > maxValue)
+	{
+		if (value < minValue) value += range;
+		else value -= range;
+	}
+	return value;
+}
+
+function search() 
+{
+	geocoder.geocode({'address': $("#search-address").val()}, 
+	    function(results, status) { 
+	        if (status == google.maps.GeocoderStatus.OK) { 
+	            var loc = results[0].geometry.location;
+	            map.panTo(loc);
+	        } 
+	        else {
+	            alert("Not found: " + status); 
+	        } 
+	    }
+	);
+}
+
+function selectText(containerid) 
+{
+	if (document.selection) 
+	{
+		var range = document.body.createTextRange();
+		range.moveToElementText(document.getElementById(containerid));
+		range.select();
+	} 
+	else if (window.getSelection) 
+	{
+		var range = document.createRange();
+		range.selectNode(document.getElementById(containerid));
+		window.getSelection().addRange(range);
+	}
+}
+
+function showRectangle()
+{
+	var center = map.getCenter();
+	var bounds = map.getBounds();
+	var bne = bounds.getNorthEast();
+	var bsw = bounds.getSouthWest();
+	var x1 = Repeat(bsw.lng(), -180, 180);
+	var y1 = Repeat(bne.lat(), -90, 90);
+	var x2 = Repeat(bne.lng(), -180, 180);
+	var y2 = Repeat(bsw.lat(), -90, 90);
+	var cx = Repeat(center.lng(), -180, 180);
+	var cy = Repeat(center.lat(), -90, 90);
+	var ne = new google.maps.LatLng(cy + (y1 - cy) * 0.7, cx + (cx - x1) * 0.7);
+	var sw = new google.maps.LatLng(cy + (y2 - cy) * 0.7, cx + (cx - x2) * 0.7);
+	rectangle.setBounds(new google.maps.LatLngBounds(sw, ne));
+	console.log(ne + "   " + sw + "   " + center);
+	updateInfo();
+	$("#map-coord").show("fast");
+}
+
+function updateInfo()
+{
+	var bounds = rectangle.getBounds();
+	var ne = bounds.getNorthEast();
+	var sw = bounds.getSouthWest();
+	
+	$("#TLLat").text(ne.lat());
+	$("#TLLon").text(sw.lng());
+	$("#BRLat").text(sw.lat());
+	$("#BRLon").text(ne.lng());
+	
+	$("div").removeClass("wrong");
+	var wrong = false;
+	if (ne.lat() > 60 || ne.lat() < -60) { $("#TLTitle").addClass("wrong"); wrong = true;}
+	if (sw.lat() > 60 || sw.lat() < -60) { $("#BRTitle").addClass("wrong"); wrong = true;}
+	
+	if (!wrong)
+	{
+		var str = '<Coords tlx="' + sw.lng() + '" tly="' + ne.lat() + '" brx="' + ne.lng() + '" bry="' + sw.lat() + '"/>';
+		$("#coordNode").text(str);
+	}
+	else
+	{
+		$("#coordNode").text("Wrong latitude");
+	}
+}
+
+$(initialize);

@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>Real World Terrain Helper</title>
+	
+	<link href="https://developers.google.com/maps/documentation/javascript/examples/default.css" rel="stylesheet">
+	<link href="RWT_Helper.css" rel="stylesheet">
+	
+	<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+	<script src="http://code.jquery.com/jquery-2.0.0.min.js"></script>
+	<script src="RWT_Helper.jscript"></script>
+	<script src="RWT_Coords.jscript"></script>
+</head>
+<body>
+	<div>
+		<div id="map-container">
+			<div id="search-block">
+				<input type="text" id="search-address" value=""/>
+				<div class="i2Style ilml15" id="btnSearch">Search</div>
+			</div>
+			<div id="map-canvas"></div>
+			<div id="map-info">
+				<div class="i2Style" id="btnCreateSelector">Place selector</div>
+				<div id="map-coord">
+					<div class="title" id="TLTitle">Top-Left</div>
+					<div class="m20i">Latitude: <div id="TLLat" class="ildiv"></div></div>
+					<div>Longitude: <div id="TLLon" class="ildiv"></div></div>
+					<div class="m20i title" id="BRTitle">Bottom-Right</div>
+					<div class="m20i">Latitude: <div id="BRLat" class="ildiv"></div></div>
+					<div>Longitude: <div id="BRLon" class="ildiv"></div></div>
+					<div class="m20i title">Copy this to Clipboard</div>
+					<div class="hint" id="coordNode" onclick="selectText('coordNode')"></div>
+					<div class="i2Style m20i" id="btnShowLinks">Show download links</div>
+				</div>
+			</div>
+			<div id="download-links" class="m20i">
+				<div class="title">Heightmaps</div>
+				<div class="hint">Download the files and extract the files «*.asc» from archives in the folder «{Project}/RWT_Cache/Heightmaps».</div>
+				<div id="dlHeightmaps"></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
